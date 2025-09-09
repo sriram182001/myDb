@@ -1,37 +1,20 @@
 #include "storage/Pager.h"
+#include "storage/Table.h"
 #include <iostream>
-#include <cstring>
 using namespace std;
 
 int main()
 {
-    Pager pager("test.db");
+    Pager pager("mydb.db");
+    Table table(&pager);
 
-    cout << "Initially, file has " << pager.getNumPages() << " pages\n";
+    table.insertRow(Row(1, "alice", "alice@example.com"));
+    table.insertRow(Row(2, "bob", "bob@example.com"));
 
-    // Write page 0
-    char pageData[PAGE_SIZE];
-    strcpy(pageData, "Hello, this is page 0!");
-    pager.writePage(0, pageData);
+    pager.flush(0);
 
-    // Write page 1
-    char pageData2[PAGE_SIZE];
-    strcpy(pageData2, "This is page 1.");
-    pager.writePage(1, pageData2);
-
-    pager.flush();
-
-    cout << "After writing, file has " << pager.getNumPages() << " pages\n";
-
-    // Read back page 0
-    char buffer[PAGE_SIZE];
-    pager.readPage(0, buffer);
-    cout << "Page 0 content: " << buffer << "\n";
-
-    // Read back page 1
-    char buffer2[PAGE_SIZE];
-    pager.readPage(1, buffer2);
-    cout << "Page 1 content: " << buffer2 << "\n";
+    cout << "\nAll rows in DB:\n";
+    table.selectAll();
 
     return 0;
 }

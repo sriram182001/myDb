@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-Pager::Pager(const string &filename) : filename(filename)
+Pager::Pager(const string &filename)
 {
     file.open(filename, ios::in | ios::out | ios::binary);
 
@@ -14,67 +14,43 @@ Pager::Pager(const string &filename) : filename(filename)
         file.close();
         file.open(filename, ios::in | ios::out | ios::binary);
     }
-
-    // Find file length
-    file.seekg(0, ios::end);
-    file_length = file.tellg();
-    file.seekg(0, ios::beg);
-
-    // Calculate pages
-    num_pages = file_length / PAGE_SIZE;
-    if (file_length % PAGE_SIZE != 0)
-    {
-        throw std::runtime_error("Corrupt database file: not aligned to PAGE_SIZE");
-    }
 }
 
 Pager::~Pager()
 {
-    flush();
+    for (size_t i = 0; i < pages.size(); i++)
+    {
+        if (pages[i] != nullptr)
+        {
+            flush(i);
+            delete[] pages[i];
+        }
+    }
     file.close();
 }
 
-size_t Pager::getNumPages() const
+char *Pager::getPage(uint32_t pageNum)
 {
-    return num_pages;
-}
-
-void *Pager::getPage(size_t page_num)
-{
-    if (page_num >= num_pages)
+    if (pageNum >= pages.size())
     {
-        throw out_of_range("Requested page is out of range");
+        pages.resize(pageNum + 1, nullptr);
     }
 
-    void *buffer = malloc(PAGE_SIZE);
-    file.seekg(page_num * PAGE_SIZE, ios::beg);
-    file.read(reinterpret_cast<char *>(buffer), PAGE_SIZE);
-    return buffer;
-}
-
-void Pager::writePage(size_t page_num, const void *data)
-{
-    file.seekp(page_num * PAGE_SIZE, ios::beg);
-    file.write(reinterpret_cast<const char *>(data), PAGE_SIZE);
-
-    if (page_num >= num_pages)
+    if (pages[pageNum] == nullptr)
     {
-        num_pages = page_num + 1;
+        pages[pageNum] = new char[PAGE_SIZE]();
+        file.seekg(pageNum * PAGE_SIZE);
+        file.read(pages[pageNum], PAGE_SIZE);
     }
+    return pages[pageNum];
 }
 
-void Pager::readPage(size_t page_num, void *destination)
+void Pager::flush(uint32_t pageNum)
 {
-    if (page_num >= num_pages)
-    {
-        throw out_of_range("Page not found");
-    }
+    if (pageNum >= pages.size() || pages[pageNum] == nullptr)
+        return;
 
-    file.seekg(page_num * PAGE_SIZE, ios::beg);
-    file.read(reinterpret_cast<char *>(destination), PAGE_SIZE);
-}
-
-void Pager::flush()
-{
+    file.seekp(pageNum * PAGE_SIZE);
+    file.write(pages[pageNum], PAGE_SIZE);
     file.flush();
 }

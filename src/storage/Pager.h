@@ -13,21 +13,14 @@ class Pager
 {
 private:
     fstream file;
-    string filename;
-    size_t file_length;
-    size_t num_pages;
+    vector<char *> pages;
 
 public:
     Pager(const string &filename);
     ~Pager();
 
-    size_t getNumPages() const;
-    void *getPage(size_t page_num);
-
-    void writePage(size_t page_num, const void *data);
-    void readPage(size_t page_num, void *destination);
-
-    void flush();
+    char *getPage(uint32_t pageNum);
+    void flush(uint32_t pageNum);
 };
 
 #endif
