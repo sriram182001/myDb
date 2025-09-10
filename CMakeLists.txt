@@ -7,9 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Include all source files
 add_executable(mydb 
     src/main.cpp
-    src/storage/Pager.cpp
-    src/storage/Table.cpp
-    src/storage/Row.cpp
+    src/pager/Pager.cpp
+    src/table/Table.cpp
+    src/row/Row.cpp
 )
 
 # Add include directories
